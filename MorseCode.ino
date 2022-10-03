@@ -1,20 +1,30 @@
 // what we are converting to Morse Code
-String morseCode = "Hello, World";
+String morseCode = "Hello, world! I'm a Morse Code Machine.";
 // which LED we are using
 int LED = 12;
+int piezo = 11;
+int freq = 200;
+
 // basic unit of time in milliseconds
-int unit = 15;
+int unit = 50;
 // time quantities for morse code
 int dot = unit;
 int dash = 3 * unit;
 int space = 7 * unit;
 int reset = 15 * unit;
-// conversion array for characters -> morse
-String Morse[] = {
-  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",  //a through i
-  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.",  // j through r
-  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."  // s through z
-  ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----.", "-----"  // 1 through 0
+
+
+//For letters
+char* letters[] = {
+".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", // A-I
+".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", // J-R 
+"...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.." // S-Z
+};
+
+//For Numbers
+char* numbers[] = {
+  "-----", ".----", "..---", "...--", "....-", ".....",
+"-....", "--...", "---..", "----."
 };
 
 void setup() {
@@ -22,53 +32,75 @@ void setup() {
   morseCode.toLowerCase();
   // initialize our LED
   pinMode(LED, OUTPUT);
-  Serial.print("Hi");
+  pinMode(piezo, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("\n" + morseCode);
 }
 
 void loop() {
-  // convert every letter to morse code, individually
+  // convert every letter to morse code, individually+
   for (int i = 0; i < morseCode.length(); i++)
   {
+    //Serial.print("Length: ");
+    //Serial.println(morseCode.length());
+    //Serial.print("i: ");
+    //Serial.println(i);
+    //Serial.println(morseCode[i]);
     morseConverter(morseCode[i]);
   }
   delay(reset);
+  Serial.println("\nreseting");
+  Serial.println("\n\n");
 }
 
 void morseConverter(char c) 
 {
-  char index = c;
-  if (isDigit(c))
+  if (c >= 'a' && c <= 'z')
   {
-    index -= '0' + 24;
+    morseToLight(letters[c - 'a']);
   }
-  else if (isAlpha(c))
+  else if (c >= 'A' && c <= 'Z')
   {
-    index -= 'a';
+    morseToLight(letters[c - 'A']);
   }
-  else if (c == 32)
+  else if (c >= '0' && c <= '9')
   {
-    illuminate(space);
+    morseToLight(numbers[c - '0']);
   }
-  Serial.println("index: " + index);
-  
-  for (int i = 0; i < Morse[index].length(); i++)
+  else if (c == ' ')
   {
-    if (Morse[index][i] == '-') 
+    delay(space);
+    Serial.print(" / ");
+  }
+}
+
+
+void morseToLight(char* sequence)
+{
+  int i = 0;
+  while (sequence[i] != NULL) 
+  {
+    if (sequence[i] == '-')
     {
       illuminate(dash);
+      Serial.print("-");
     }
-    else if (Morse[index][i] == '.') 
+    else if(sequence[i] == '.')
     {
       illuminate(dot);
+      Serial.print(".");
     }
-    // break between parts of the same letter
-    illuminate(dash);
+    i++; 
   }
+Serial.print(" ");
+delay(dash);
 }
 
 void illuminate(int time)
 {
+  //tone(piezo, freq);
   digitalWrite(LED, HIGH);
   delay(time);
-  digitalWrite(LED, LOW); 
+  digitalWrite(LED, LOW);
+  noTone(piezo); 
 }
